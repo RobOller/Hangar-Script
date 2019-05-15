@@ -1,4 +1,4 @@
-﻿using Sandbox.ModAPI.Ingame;
+using Sandbox.ModAPI.Ingame;
 using SpaceEngineers.Game.ModAPI.Ingame;
 using System.Collections.Generic;
 
@@ -6,6 +6,7 @@ namespace IngameScript
 {
     partial class Program : MyGridProgram
     {
+        //Scope of this goes in Programmable Block
         VRageMath.Color colorRed = new VRageMath.Color(255, 0, 0, 255);
         VRageMath.Color colorWhite = new VRageMath.Color(255, 255, 255, 255);
         public void Main(string argument, UpdateType updateSource)
@@ -20,10 +21,12 @@ namespace IngameScript
             List<IMyTerminalBlock> doors = new List<IMyTerminalBlock>();
             hangarDoors.GetBlocksOfType<IMyAirtightHangarDoor>(doors);
 
+            bool missing = false;
+
             if (hangarDoors == null) //Returns if doors not found
             {
                 Echo("Doors not found");
-                return;
+                missing = true;
             }
 
             List<IMyTerminalBlock> lights = new List<IMyTerminalBlock>();
@@ -32,30 +35,35 @@ namespace IngameScript
             if (hangarLights == null) //Returns if lights not found
             {
                 Echo("Lights not found");
-                return;
+                missing = true;
             }
 
             IMyTimerBlock timer = GridTerminalSystem.GetBlockWithName("[Hangar] Timer Block") as IMyTimerBlock;
 
-            if(timer == null) //Returns if timer not found
+            if (timer == null) //Returns if timer not found
             {
                 Echo("Timer not found");
-                return;
+                missing = true;
             }
 
             IMyAirVent vent = GridTerminalSystem.GetBlockWithName("[Hangar] Air Vent") as IMyAirVent;
 
-            if(vent == null) //Returns if vent not found
+            if (vent == null) //Returns if vent not found
             {
                 Echo("Vent not found");
-                return;
+                missing = true;
             }
 
             IMySoundBlock speaker = GridTerminalSystem.GetBlockWithName("[Hangar] Sound Block") as IMySoundBlock;
 
-            if(speaker == null) //Returns if speaker not found
+            if (speaker == null) //Returns if speaker not found
             {
                 Echo("Speaker not found");
+                missing = true;
+            }
+
+            if (missing == true)
+            {
                 return;
             }
 
@@ -70,10 +78,11 @@ namespace IngameScript
                     NormalLights(lights);
                     display.FontSize = 4.4F;
                     Echo("All is well");
-                    display.WritePublicText("All is well");
+                    display.WritePublicTitle("All is well");
                     timer.Enabled = true;
                     timer.TriggerDelay = 15;
                     speaker.LoopPeriod = 10;
+                    speaker.Stop();
                     Runtime.UpdateFrequency = UpdateFrequency.None;
                 }
                 else //Program will start hangar toggle process else wise
@@ -93,11 +102,11 @@ namespace IngameScript
                     ToggleDoors(doors);
                     display.FontSize = 3;
                     Echo("!!!CAUTION!!!");
-                    display.WritePublicText("!!!CAUTION!!!");
+                    display.WritePublicTitle("!!!CAUTION!!!");
                     timer.TriggerDelay = 10;
                     timer.StartCountdown();
                     vent.Depressurize = false;
-                    if(speaker.LoopPeriod != 25)
+                    if (speaker.LoopPeriod != 25)
                     {
                         speaker.LoopPeriod = 10;
                         speaker.Play();
@@ -112,13 +121,13 @@ namespace IngameScript
 
             foreach (IMyAirtightHangarDoor door in doors) //Counts how many doors are open
             {
-                if(door.Status == DoorStatus.Open)
+                if (door.Status == DoorStatus.Open)
                 {
                     openCount++;
                 }
             }
 
-            if(openCount >= doors.Count / 2) //If most doors are open, then close the doors
+            if (openCount >= doors.Count / 2) //If most doors are open, then close the doors
             {
                 foreach (IMyAirtightHangarDoor door in doors)
                 {
